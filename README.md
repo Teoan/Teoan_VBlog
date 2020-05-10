@@ -18,8 +18,8 @@
 
 ## 目录介绍
 **blogserver**：后端的SpringBoot项目，可直接用idea打开。运行项目后打开浏览器输入*lcalhost:8081/index.html*访问浏览项目内容。
-**vueblog**：前端Vue项目，可用VsCode打开。
-
+**vueblog**：前端Vue项目，安装依赖后可用VsCode打开。
+**vueblog2.sql**:数据库文件。
 ## 与原项目的不同
 + Vue CLI的版本从原来的2.x改为新的3.x，主要的的区别在于包名，配置文件,启动脚本名称不同等。具体可以看[Vue CLI官网](https://cli.vuejs.org/zh/guide/installation.html)
 + 删除了数据统计页面，保留与后端数据紧密联系的数据显示页面。
