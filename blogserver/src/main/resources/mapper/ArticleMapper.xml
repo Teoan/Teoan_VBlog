@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.teoan.blogserver.mapper.ArticleMapper">
+
+    <resultMap type="com.teoan.blogserver.entity.Article" id="ArticleMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="mdcontent" column="mdContent" jdbcType="VARCHAR"/>
+        <result property="htmlcontent" column="htmlContent" jdbcType="VARCHAR"/>
+        <result property="summary" column="summary" jdbcType="VARCHAR"/>
+        <result property="cid" column="cid" jdbcType="INTEGER"/>
+        <result property="uid" column="uid" jdbcType="INTEGER"/>
+        <result property="publishdate" column="publishDate" jdbcType="TIMESTAMP"/>
+        <result property="edittime" column="editTime" jdbcType="TIMESTAMP"/>
+        <result property="state" column="state" jdbcType="INTEGER"/>
+        <result property="pageview" column="pageView" jdbcType="INTEGER"/>
+        <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+        <result property="cateName" column="cateName" jdbcType="VARCHAR"/>
+        <collection property="tags" ofType="com.teoan.blogserver.entity.Tags" column="tagName">
+            <id property="id" column="tid"/>
+            <result property="tagname" column="tagName"/>
+        </collection>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="getArticleById" resultMap="ArticleMap">
+    select article.* ,t.id as tid,t.tagName as tagName,u.nickname ,c.cateName from
+    article left join article_tags a on article.id = a.aid left join category c on article.cid = c.id
+    left join user u on article.uid = u.id left join tags t on a.tid = t.id where article.id=#{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="ArticleMap">
+        select
+          id, title, mdContent, htmlContent, summary, cid, uid, publishDate, editTime, state, pageView
+        from vueblog2.article
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="ArticleMap">
+        select
+          id, title, mdContent, htmlContent, summary, cid, uid, publishDate, editTime, state, pageView
+        from vueblog2.article
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="title != null and title != ''">
+                and title = #{title}
+            </if>
+            <if test="mdcontent != null and mdcontent != ''">
+                and mdContent = #{mdcontent}
+            </if>
+            <if test="htmlcontent != null and htmlcontent != ''">
+                and htmlContent = #{htmlcontent}
+            </if>
+            <if test="summary != null and summary != ''">
+                and summary = #{summary}
+            </if>
+            <if test="cid != null">
+                and cid = #{cid}
+            </if>
+            <if test="uid != null">
+                and uid = #{uid}
+            </if>
+            <if test="publishdate != null">
+                and publishDate = #{publishdate}
+            </if>
+            <if test="edittime != null">
+                and editTime = #{edittime}
+            </if>
+            <if test="state != null">
+                and state = #{state}
+            </if>
+            <if test="pageview != null">
+                and pageView = #{pageview}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="addNewArticle" keyProperty="id" useGeneratedKeys="true">
+        insert into vueblog2.article(title, mdContent, htmlContent, summary, cid, uid, publishDate, editTime, state, pageView)
+        values (#{title}, #{mdcontent}, #{htmlcontent}, #{summary}, #{cid}, #{uid}, #{publishdate}, #{edittime}, #{state}, #{pageview})
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="updateArticle">
+        update vueblog2.article
+        <set>
+            <if test="title != null and title != ''">
+                title = #{title},
+            </if>
+            <if test="mdcontent != null and mdcontent != ''">
+                mdContent = #{mdcontent},
+            </if>
+            <if test="htmlcontent != null and htmlcontent != ''">
+                htmlContent = #{htmlcontent},
+            </if>
+            <if test="summary != null and summary != ''">
+                summary = #{summary},
+            </if>
+            <if test="cid != null">
+                cid = #{cid},
+            </if>
+            <if test="uid != null">
+                uid = #{uid},
+            </if>
+            <if test="publishdate != null">
+                publishDate = #{publishdate},
+            </if>
+            <if test="edittime != null">
+                editTime = #{edittime},
+            </if>
+            <if test="state != null and state==1">
+                state = 1,
+            </if>
+            <if test="pageview != null">
+                pageView = #{pageview},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteArticleByIds">
+        delete from vueblog2.article where id in
+        <foreach collection="aids" item="aid" separator="," open="(" close=")">
+            #{aid}
+        </foreach>
+    </delete>
+
+    <select id="getArticleByState" resultMap="ArticleMap">
+        select a.id,a.title,a.editTime,a.pageView,a.state,u.nickname,c.cateName,a.uid from article a,user u,category c
+        where a.cid=c.id and a.uid=u.id
+        <if test="state!=-2">
+            and a.uid=#{uid}
+        </if>
+        <if test="state!=-1 and state!=-2">
+            and a.state=#{state}
+        </if>
+        <if test="state==-2">
+            and a.state=1
+        </if>
+        <if test="keywords!=null">
+            AND title LIKE concat('%',#{keywords},'%')
+        </if>
+        ORDER BY a.editTime DESC limit #{start},#{count};
+    </select>
+
+
+    <update id="updateArticleState">
+        update article set state=#{state} where id in
+        <foreach collection="aids" item="aid" separator="," open="(" close=")">
+            #{aid}
+        </foreach>
+    </update>
+
+    <update id="updateArticleStateById">
+        update article set state=#{state} where id=#{articleId}
+    </update>
+
+    <select id="getCountDate" resultType="String" parameterType="Integer">
+        select countDate from pv where uid=#{uid} order by countDate limit #{limit}
+    </select>
+
+    <select id="getPvByUid" resultType="Integer" parameterType="Integer">
+        select pv from pv where uid=#{uid} order by countDate limit #{limit}
+    </select>
+
+    <update id="pvIncrement">
+        update article set pageView=pageView+1 where id=#{aid}
+    </update>
+
+    <select id="getArticleCountByState" resultType="Integer">
+        select count(*) from article
+        <where>
+            <if test="state!=-1">
+                AND state=#{state}
+            </if>
+            <if test="uid!=null">
+                AND uid=#{uid}
+            </if>
+            <if test="keywords!=null">
+                AND title LIKE concat('%',#{keywords},'%')
+            </if>
+        </where>
+    </select>
+</mapper>

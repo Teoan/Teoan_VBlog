@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.teoan.blogserver.mapper.UserMapper">
+
+    <resultMap type="com.teoan.blogserver.entity.User" id="UserMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="username" column="username" jdbcType="VARCHAR"/>
+        <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="enabled" column="enabled" />
+        <result property="email" column="email" jdbcType="VARCHAR"/>
+        <result property="userface" column="userface" jdbcType="VARCHAR"/>
+        <result property="regtime" column="regTime" jdbcType="TIMESTAMP"/>
+        <collection property="roles" ofType="com.teoan.blogserver.entity.Role">
+            <id column="rid" property="id"/>
+            <result column="rname" property="name"/>
+        </collection>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="getUserById" resultMap="UserMap">
+        SELECT u.*,r.`id` AS rid,r.`name` AS rname FROM user u,roles r,roles_user ru WHERE u.`id`=ru.`uid` AND
+        r.`id`=ru.`rid` AND u.`id`=#{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="UserMap">
+        select
+          id, username, nickname, password, enabled, email, userface, regTime
+        from vueblog2.user
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="UserMap">
+        select
+          id, username, nickname, password, enabled, email, userface, regTime
+        from vueblog2.user
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="username != null and username != ''">
+                and username = #{username}
+            </if>
+            <if test="nickname != null and nickname != ''">
+                and nickname = #{nickname}
+            </if>
+            <if test="password != null and password != ''">
+                and password = #{password}
+            </if>
+            <if test="enabled != null">
+                and enabled = #{enabled}
+            </if>
+            <if test="email != null and email != ''">
+                and email = #{email}
+            </if>
+            <if test="userface != null and userface != ''">
+                and userface = #{userface}
+            </if>
+            <if test="regtime != null">
+                and regTime = #{regtime}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into vueblog2.user(username, nickname, password, enabled, email, userface, regTime)
+        values (#{username}, #{nickname}, #{password}, #{enabled}, #{email}, #{userface}, #{regtime})
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update vueblog2.user
+        <set>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+            <if test="nickname != null and nickname != ''">
+                nickname = #{nickname},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <if test="enabled != null">
+                enabled = #{enabled},
+            </if>
+            <if test="email != null and email != ''">
+                email = #{email},
+            </if>
+            <if test="userface != null and userface != ''">
+                userface = #{userface},
+            </if>
+            <if test="regtime != null">
+                regTime = #{regtime},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteUserById">
+        delete from vueblog2.user where id = #{id}
+    </delete>
+
+    <select id="loadUserByUsername" resultMap="UserMap">
+        select * from vueblog2.user where username=#{username}
+    </select>
+
+    <update id="updateUserEmail">
+        update vueblog2.user
+        <set>
+            <if test="email != null">
+                email=#{email}
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+
+    <select id="getUserByNickname" resultMap="UserMap">
+        SELECT u.*,r.`id` AS rid,r.`name` AS rname FROM user u,roles r,roles_user ru WHERE u.`id`=ru.`uid` AND
+        r.`id`=ru.`rid` AND u.`id` NOT IN(SELECT u.`id` FROM user u,roles_user ru WHERE u.`id`=ru.`uid` AND ru.`rid`=1)
+        <choose>
+            <when test="nickname!=null and nickname!=''">
+                and u.nickname like concat('%',#{nickname},'%') ORDER BY u.`id`
+            </when>
+            <otherwise>
+                ORDER BY u.`id` limit 20
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getAllRole" resultType="com.teoan.blogserver.entity.Role">
+        select * from roles;
+    </select>
+
+    <update id="updateUserEnable" >
+        update user
+        <set>
+            <if test="enable != null">
+                enabled=#{enable}
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <delete id="deleteUserRolesByUid">
+        delete from roles_user where uid=#{id}
+    </delete>
+
+    <insert id="setUserRoles">
+        insert into roles_user(rid,uid) VALUES
+        <foreach collection="rids" separator="," item="rid">
+            (#{rid},#{id})
+        </foreach>
+    </insert>
+</mapper>
