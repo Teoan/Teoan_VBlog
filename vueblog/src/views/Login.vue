@@ -35,7 +35,8 @@ export default {
             console.log();
             var _this=this;
             _this.loading = true;
-            this.postRequest('/login','username='+_this.loginFrom.username+'&password='+_this.loginFrom.password).then(resp=>{
+            var url = 'username='+_this.loginFrom.username+'&password='+_this.loginFrom.password+'&remember-me='+_this.checked;
+            this.postRequest('/login',url).then(resp=>{
                 if(resp.status==200){
                     //成功
                     var json = resp.data;

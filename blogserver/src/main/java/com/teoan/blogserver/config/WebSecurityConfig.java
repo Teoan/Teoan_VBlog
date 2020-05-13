@@ -68,7 +68,7 @@ public class WebSecurityConfig  extends WebSecurityConfigurerAdapter {
                 .permitAll()//允许任何人访问
                 .and()
                 .logout()
-                .permitAll()
+                .permitAll().and().rememberMe().key("Teoan")
                 .and()
                 .csrf()
                 .disable()
